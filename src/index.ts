@@ -5,3 +5,4 @@ export * from "./engine.js";
 export * from "./plugins.js";
 
 export * from "./batch.js";
+export * from "./faq.js";

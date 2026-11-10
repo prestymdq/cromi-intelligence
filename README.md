@@ -77,3 +77,20 @@ MIT. See [LICENSE](LICENSE). Contributions and integrations are welcome.
 Register `createBatchPlugin()` to analyze multiline or semicolon-separated lists against any adapter. The resolver detects exact identifiers, duplicates, ambiguous labels and unresolved entries. It processes up to 500 entries, in bounded batches, without writing to the host system.
 
 This library is not published to npm yet. For now, clone the repository and build it, or reference it as a local package in your application.
+
+## Floating chat widget
+
+Cromi now includes a **framework-free, customizable chat bubble** in `widget/`, with an independent CSS file and an isolated Shadow DOM interface.
+
+Try the interactive demo:
+
+```bash
+npm install
+npm run demo:widget
+```
+
+Open [http://127.0.0.1:4173](http://127.0.0.1:4173) to test the floating chat and change its name, theme, accent color and position.
+
+A new `createFaqPlugin()` provides **topic-specific customer information** without an LLM, cloud APIs or extra cost. To use the widget against your own system, pass a `respond` function or set an `apiEndpoint`. Branding and conversation logic are entirely independent.
+
+See [Widget integration guide](docs/WIDGET.md). This repository ships no artwork, data, logos or integrations from any private business.

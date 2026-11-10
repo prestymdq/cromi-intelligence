@@ -5,13 +5,30 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist", "README.md", "LICENSE"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./widget": "./widget/cromi-widget.js",
+    "./widget.css": "./widget/cromi-widget.css"
+  },
+  "files": [
+    "dist",
+    "widget",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "demo": "npm run build && node examples/demo.mjs"
+    "demo": "npm run build && node examples/demo.mjs",
+    "demo:widget": "npm run build && node examples/serve-widget.mjs"
   },
-  "engines": { "node": ">=20" },
-  "devDependencies": { "typescript": "^5.9.3" }
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }
