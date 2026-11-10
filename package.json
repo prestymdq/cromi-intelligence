@@ -1,0 +1,17 @@
+{
+  "name": "cromi-intelligence",
+  "version": "0.1.0",
+  "description": "Extensible, deterministic conversational engine for any application",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "demo": "npm run build && node examples/demo.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "devDependencies": { "typescript": "^5.9.3" }
+}
