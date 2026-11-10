@@ -54,3 +54,30 @@ test('un PDF dañado responde con error sin cortar la conexión del servidor', a
   });
   assert.equal(good.status, 201);
 });
+
+test('59 MiB reaches document validation without losing HTTP connection', async (t) => {
+  const {server,base} = await startServer();
+  t.after(async () => { if (server.exitCode === null) server.kill(); });
+  const big = Buffer.alloc(59 * 1024 * 1024, 65);
+  const response = await fetch(base + '/api/knowledge/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream', 'X-Cromi-Filename': 'large.txt' },
+    body: big,
+  });
+  assert.equal(response.status, 422);
+  assert.match((await response.json()).error, /límite de texto/);
+  assert.equal((await fetch(base + '/api/knowledge/documents')).status, 200);
+});
+
+test('65 MiB is rejected with JSON 413 without dropping the connection', async (t) => {
+  const {server,base} = await startServer();
+  t.after(async () => { if (server.exitCode === null) server.kill(); });
+  const response = await fetch(base + '/api/knowledge/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream', 'X-Cromi-Filename': 'too-big.txt' },
+    body: Buffer.alloc(65 * 1024 * 1024, 65),
+  });
+  assert.equal(response.status, 413);
+  assert.match((await response.json()).error, /64 MiB/);
+  assert.equal((await fetch(base + '/api/knowledge/documents')).status, 200);
+});

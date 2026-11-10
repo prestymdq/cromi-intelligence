@@ -9,8 +9,8 @@ export async function extractKnowledgeFile(input: DocumentInput, options: Knowle
   const maxBytes = options.maxBytes ?? 5 * 1024 * 1024;
   const maxPages = options.maxPages ?? 100;
   const maxTextChars = options.maxTextChars ?? 250_000;
-  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 20*1024*1024) throw Error('maxBytes inválido');
-  if (!Number.isSafeInteger(maxPages) || maxPages < 1 || maxPages > 200) throw Error('maxPages inválido');
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 64*1024*1024) throw Error('maxBytes inválido');
+  if (!Number.isSafeInteger(maxPages) || maxPages < 1 || maxPages > 1000) throw Error('maxPages inválido');
   if (!Number.isSafeInteger(maxTextChars) || maxTextChars < 1 || maxTextChars > 2_000_000) throw Error('maxTextChars inválido');
   if (!(input.bytes instanceof Uint8Array) || !input.bytes.length || input.bytes.length > maxBytes) throw Error('Tamaño de archivo no permitido');
   const name = input.name.trim().split(/[\\/]/).pop()?.slice(0, 120) || '';
@@ -23,18 +23,21 @@ export async function extractKnowledgeFile(input: DocumentInput, options: Knowle
     // Dynamic imports keep the core dependency-free and avoid loading PDF.js in browsers.
     const packageName = 'pdfjs-dist/legacy/build/pdf.mjs';
     const pdfjs = await import(packageName);
-    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(input.bytes), useSystemFonts: true });
+    const loadingTask = pdfjs.getDocument({ data: input.bytes, useSystemFonts: true });
     try {
       const pdf = await loadingTask.promise;
       if (pdf.numPages > maxPages) throw Error('El PDF supera el límite de páginas');
       const pages: string[] = [];
+      let extractedChars = 0;
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
         const pageText = content.items.map((item: { str?: string }) => item.str || '').filter(Boolean).join(' ');
-        pages.push('Página ' + i + '\n' + pageText);
+        const pageContent = 'Página ' + i + '\n' + pageText;
+        extractedChars += pageContent.length + 2;
+        if (extractedChars > maxTextChars) throw Error('El PDF supera el límite de texto');
+        pages.push(pageContent);
         page.cleanup();
-        if (pages.join('').length > maxTextChars) throw Error('El PDF supera el límite de texto');
       }
       text = pages.join('\n\n');
     } finally { await loadingTask.destroy(); }

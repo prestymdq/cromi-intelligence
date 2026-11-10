@@ -14,7 +14,7 @@ npm run demo:knowledge
 
 Abrí **http://127.0.0.1:4174** en la misma computadora. El servidor escucha únicamente en `127.0.0.1` y los archivos se mantienen **en memoria RAM** hasta que se detiene el proceso o se pulsa borrar. No se guardan en Git ni se suben a servicios externos. Podés importar TXT, Markdown, PDF con texto seleccionable o DOCX. No se incluye OCR para PDFs escaneados.
 
-**Límites de la demo:** máximo 5 MiB por archivo, 20 archivos y 250.000 caracteres por documento, 100 páginas PDF como máximo. Para proteger un despliegue público hacen falta autenticación, autorización, aislamiento entre empresas, limitación de solicitudes, auditoría y almacenamiento seguro, implementados por el integrador. **La demo no debe publicarse directamente en Internet.** No uses material confidencial si no controlás el equipo.
+**Límites de la demo:** máximo 64 MiB por archivo, 20 archivos y 1.000.000 caracteres por documento, 1000 páginas PDF como máximo. Para proteger un despliegue público hacen falta autenticación, autorización, aislamiento entre empresas, limitación de solicitudes, auditoría y almacenamiento seguro, implementados por el integrador. **La demo no debe publicarse directamente en Internet.** No uses material confidencial si no controlás el equipo.
 
 ## Modo sin IA: gratuito y autónomo
 
@@ -48,7 +48,7 @@ Ollama y algunos modelos pueden utilizarse sin pago de licencia o por consulta, 
 ## APIs internas de la demo
 
 - `GET /api/knowledge/documents` — lista nombres y secciones de los documentos en RAM.
-- `POST /api/knowledge/upload` — cuerpo binario (hasta 5 MiB), cabeceras `Content-Type: application/octet-stream` y `X-Cromi-Filename` (nombre codificado con `encodeURIComponent`).
+- `POST /api/knowledge/upload` — cuerpo binario (hasta 64 MiB), cabeceras `Content-Type: application/octet-stream` y `X-Cromi-Filename` (nombre codificado con `encodeURIComponent`).
 - `POST /api/knowledge/chat` — JSON `{ "message": "pregunta", "sessionId": "uuid" }`, respuesta `{ "text": "respuesta" }`.
 - `DELETE /api/knowledge/documents` — limpia la documentación en memoria.
 
@@ -72,3 +72,5 @@ Dependencias de código abierto para leer documentos: **Mozilla PDF.js** (Apache
 ### Manejo de archivos defectuosos en la demo
 
 La extracción de documentos ahora se ejecuta en un **proceso hijo local aislado del servidor HTTP**. Si un PDF o DOCX dañado provoca un error o interrumpe el analizador, el servidor sigue disponible y devuelve un error JSON en lugar de perder la conexión. Se limita el tiempo de extracción y el proceso no recibe credenciales del entorno principal. La interfaz muestra un aviso de conexión si la demo se detiene. Esto no sustituye controles de seguridad para un servicio de producción.
+
+**Archivos grandes (64 MiB):** La demostración admite PDF/DOCX/TXT/MD de hasta 64 MiB y verifica el tamaño antes de enviarlo. La extracción se realiza en un proceso aislado con un máximo de 1.000 páginas PDF y 1.000.000 caracteres de texto extraído. Los archivos de gran tamaño pueden tardar y consumir mucha memoria. Los PDF escaneados sin texto siguen requiriendo OCR. La capacidad máxima es una decisión del integrador y no implica compatibilidad universal con cualquier PDF.

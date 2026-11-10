@@ -6,7 +6,7 @@
 </style></head>
 <body><main class="wrap"><div class="top"><div class="brand">Cromi <span>Knowledge</span></div><span class="mini">Local · Privado · Sin API paga</span></div>
 <section class="hero"><div class="eyebrow">Motor de conocimiento modular</div><h1>Transformá tus documentos en respuestas.</h1><p>Importá textos, manuales o dossiers y consultalos usando el chat. Sin IA, Cromi muestra extractos verificables; Ollama es opcional para respuestas más naturales. Los documentos quedan en memoria mientras este servidor está ejecutándose.</p></section>
-<div class="grid"><section class="card"><h2>Documentos del asistente</h2><p class="muted">Archivos TXT, MD, PDF con texto seleccionable y DOCX. Máximo 5 MiB por documento y 20 documentos en esta demo.</p><label class="upload">Cargar documento <input type="file" id="file" accept=".txt,.md,.pdf,.docx" aria-label="Seleccionar documento"></label><div class="status" id="status" role="status"></div><ul id="documents" class="items"></ul><button id="clear" class="danger" type="button">Borrar documentos de la sesión</button></section>
+<div class="grid"><section class="card"><h2>Documentos del asistente</h2><p class="muted">Archivos TXT, MD, PDF con texto seleccionable y DOCX. Máximo 64 MiB por documento y 20 documentos en esta demo.</p><label class="upload">Cargar documento <input type="file" id="file" accept=".txt,.md,.pdf,.docx" aria-label="Seleccionar documento"></label><div class="status" id="status" role="status"></div><ul id="documents" class="items"></ul><button id="clear" class="danger" type="button">Borrar documentos de la sesión</button></section>
 <section class="card"><h2>Probá el asistente</h2><p class="muted">Abrí la burbuja de la esquina y preguntá algo que figure en el archivo. No se conecta a ninguna API comercial.</p><span class="pill" id="mode">Consultando modo...</span><ul class="list"><li>Buscá información concreta dentro de los documentos</li><li>Respuestas con identificación de la fuente</li><li>Sin guardar archivos en la carpeta del proyecto</li><li>Avatar, estilos e interfaz independientes del motor</li></ul><p class="hint">El modo IA se activa con <code>CROMI_USE_OLLAMA=1</code> y un Ollama local instalado.</p></section></div>
 </main><script type="module">
 import { mountCromiWidget } from '../widget/cromi-widget.js';
@@ -14,14 +14,8 @@ const status = document.querySelector('#status');
 const list = document.querySelector('#documents');
 const file = document.querySelector('#file');
 const notice = (s, isError=false) => { status.textContent=s; status.classList.toggle('error',isError); };
-async function request(url, options) {
-  try {
-    return await fetch(url, options);
-  } catch {
-    throw new Error('Se perdió la conexión con el servidor de Cromi. Revisá la terminal de npm run demo:knowledge y volvé a intentar.');
-  }
-}
-
+const MAX_UPLOAD_BYTES = 64 * 1024 * 1024;
+async function request(url, options) { try { return await fetch(url, options); } catch { throw new Error('Se perdió la conexión con el servidor de Cromi. Revisá la terminal.'); } }
 async function refresh() {
   const response = await request('/api/knowledge/documents');
   const data = await response.json();
@@ -31,7 +25,8 @@ async function refresh() {
 }
 file.addEventListener('change',async()=>{
   const item=file.files?.[0]; if(!item)return;
-  notice('Leyendo documento...');
+  if (item.size > MAX_UPLOAD_BYTES) { notice('El archivo supera el límite de 64 MiB. Elegí otro documento.', true); file.value=''; return; }
+  notice('Cargando y procesando documento. Los PDF grandes pueden tardar unos minutos...');
   try{
     const response=await request('/api/knowledge/upload',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Cromi-Filename':encodeURIComponent(item.name)},body:item});
     const data=await response.json().catch(()=>({error:'El servidor devolvió una respuesta inválida.'}));
