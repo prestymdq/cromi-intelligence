@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { resolve, dirname, extname } from "node:path";
+import { resolveDemoAsset } from "./demo-paths.mjs";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -11,12 +12,8 @@ const server = createServer(async (req, res) => {
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, "http://localhost").pathname); }
   catch { res.writeHead(400).end("Invalid path"); return; }
-  if (pathname === "/") pathname = "/examples/widget.html";
-  if (!(pathname === "/examples/widget.html" || pathname.startsWith("/widget/") || pathname.startsWith("/dist/"))) {
-    res.writeHead(404).end("Not found"); return;
-  }
-  const fullpath = resolve(root, "." + pathname);
-  if (!fullpath.startsWith(root + "/") || !Object.hasOwn(mime, extname(fullpath))) {
+  const fullpath = resolveDemoAsset(root, pathname);
+  if (!fullpath) {
     res.writeHead(404).end("Not found"); return;
   }
   try {
