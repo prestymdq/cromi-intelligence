@@ -94,3 +94,20 @@ Open [http://127.0.0.1:4173](http://127.0.0.1:4173) to test the floating chat an
 A new `createFaqPlugin()` provides **topic-specific customer information** without an LLM, cloud APIs or extra cost. To use the widget against your own system, pass a `respond` function or set an `apiEndpoint`. Branding and conversation logic are entirely independent.
 
 See [Widget integration guide](docs/WIDGET.md). This repository ships no artwork, data, logos or integrations from any private business.
+
+
+## Cromi Knowledge (v0.2)
+
+**Document-powered, offline-first customer assistance** is available as an optional module. Import **TXT, Markdown, text-based PDF, and DOCX** documents into a local in-memory knowledge index. Search and return grounded excerpts with document sources, without an LLM or commercial API.
+
+Optionally connect **Ollama on your own machine** to produce natural-language answers from retrieved passages. No external LLM service is required or configured. Ollama defaults to disabled and accepts only a loopback HTTP endpoint.
+
+```bash
+npm install
+npm test
+npm run demo:knowledge
+```
+
+Then open `http://127.0.0.1:4174`. Use the document upload card and the floating chat. This is a **localhost-only development demo**, not a public multi-user service; documents remain in RAM. No business files, customer data, credentials, or private integrations are included.
+
+Read the [Knowledge module and security guide](docs/KNOWLEDGE.md) before connecting private documents or deploying anything.
