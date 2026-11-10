@@ -14,8 +14,16 @@ const status = document.querySelector('#status');
 const list = document.querySelector('#documents');
 const file = document.querySelector('#file');
 const notice = (s, isError=false) => { status.textContent=s; status.classList.toggle('error',isError); };
+async function request(url, options) {
+  try {
+    return await fetch(url, options);
+  } catch {
+    throw new Error('Se perdió la conexión con el servidor de Cromi. Revisá la terminal de npm run demo:knowledge y volvé a intentar.');
+  }
+}
+
 async function refresh() {
-  const response = await fetch('/api/knowledge/documents');
+  const response = await request('/api/knowledge/documents');
   const data = await response.json();
   list.replaceChildren();
   for (const doc of data.documents || []) { const li = document.createElement('li'); li.textContent = `${doc.title} · ${doc.sections} secciones`; list.appendChild(li); }
@@ -25,8 +33,8 @@ file.addEventListener('change',async()=>{
   const item=file.files?.[0]; if(!item)return;
   notice('Leyendo documento...');
   try{
-    const response=await fetch('/api/knowledge/upload',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Cromi-Filename':encodeURIComponent(item.name)},body:item});
-    const data=await response.json();
+    const response=await request('/api/knowledge/upload',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Cromi-Filename':encodeURIComponent(item.name)},body:item});
+    const data=await response.json().catch(()=>({error:'El servidor devolvió una respuesta inválida.'}));
     if(!response.ok)throw Error(data.error||'No se pudo cargar el documento');
     notice(`Documento cargado: ${data.document.title}. Abrí el chat para consultarlo.`);
     await refresh();
@@ -34,7 +42,7 @@ file.addEventListener('change',async()=>{
 });
 document.querySelector('#clear').addEventListener('click',async()=>{
   if(!confirm('¿Borrar los documentos cargados en esta demo?'))return;
-  const response=await fetch('/api/knowledge/documents',{method:'DELETE'});
+  const response=await request('/api/knowledge/documents',{method:'DELETE'});
   if(!response.ok)return notice('No se pudo limpiar la sesión',true);
   await refresh(); notice('Se eliminaron los documentos de la sesión.');
 });

@@ -30,3 +30,27 @@ test('local upload, grounded answer, blocked cross-origin, clearing and no priva
   response=await fetch(base+'/api/knowledge/documents',{method:'DELETE'});assert.equal(response.status,200);
   response=await fetch(base+'/api/knowledge/documents');assert.deepEqual((await response.json()).documents,[]);
 });
+
+test('un PDF dañado responde con error sin cortar la conexión del servidor', async (t) => {
+  const {server,base} = await startServer();
+  t.after(async () => {
+    if (server.exitCode === null) server.kill();
+    await Promise.race([once(server,'close'),new Promise(r=>setTimeout(r,1000))]);
+  });
+  const bad = await fetch(base + '/api/knowledge/upload', {
+    method:'POST',
+    headers: {'Content-Type':'application/octet-stream','X-Cromi-Filename':'invalid.pdf'},
+    body: Buffer.from('%PDF-1.7\nThis is intentionally not a PDF\n%%EOF'),
+  });
+  assert.ok([400, 422, 503].includes(bad.status), 'Expected a handled parser error: ' + bad.status);
+  const payload = await bad.json();
+  assert.equal(typeof payload.error, 'string');
+  const alive = await fetch(base + '/api/knowledge/documents');
+  assert.equal(alive.status, 200);
+  const good = await fetch(base + '/api/knowledge/upload', {
+    method:'POST',
+    headers: {'Content-Type':'application/octet-stream','X-Cromi-Filename':'manual.txt'},
+    body: 'Atención al público: lunes a viernes.',
+  });
+  assert.equal(good.status, 201);
+});

@@ -68,3 +68,7 @@ console.log((await assistant.respond('¿Cuáles son los horarios?', 'visitante-1
 Para integrar Ollama, reemplazá `createKnowledgePlugin(base)` con `createOllamaKnowledgePlugin(base)` **solo desde un proceso de servidor confiable**. La clase `KnowledgeBase` puede alojarse en memoria para casos pequeños o ser sustituida por un índice de producción que implemente controles por organización y usuario. La interfaz `widget/cromi-widget.js` se puede conectar al backend usando `apiEndpoint`.
 
 Dependencias de código abierto para leer documentos: **Mozilla PDF.js** (Apache-2.0) y **Mammoth** (BSD-2-Clause). El núcleo conversacional y el widget son independientes de estos paquetes.
+
+### Manejo de archivos defectuosos en la demo
+
+La extracción de documentos ahora se ejecuta en un **proceso hijo local aislado del servidor HTTP**. Si un PDF o DOCX dañado provoca un error o interrumpe el analizador, el servidor sigue disponible y devuelve un error JSON en lugar de perder la conexión. Se limita el tiempo de extracción y el proceso no recibe credenciales del entorno principal. La interfaz muestra un aviso de conexión si la demo se detiene. Esto no sustituye controles de seguridad para un servicio de producción.

@@ -2,8 +2,8 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname, extname, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
-import { createCromi, KnowledgeBase, createKnowledgePlugin, createOllamaKnowledgePlugin, extractKnowledgeFile } from '../dist/index.js';
+import { createCromi, KnowledgeBase, createKnowledgePlugin, createOllamaKnowledgePlugin } from '../dist/index.js';
+import { extractKnowledgeInChild } from './parse-knowledge-isolated.mjs';
 
 /** Local-only demo: no file persistence, no external API, no user accounts. */
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -64,7 +64,7 @@ const server = createServer(async (req, res) => {
         try { name = decodeURIComponent(rawName); }
         catch { return writeJson(res, 400, { error: 'Nombre del archivo inválido.' }); }
         const file = await readBody(req, maxBodyBytes);
-        const doc = await extractKnowledgeFile({ name, bytes: new Uint8Array(file), id: randomUUID() });
+        const doc = await extractKnowledgeInChild({ name, bytes: new Uint8Array(file) });
         base.add(doc);
         return writeJson(res, 201, { document: { id: doc.id, title: doc.title, characters: doc.text.length }, documents: base.list() });
       }
@@ -93,7 +93,7 @@ const server = createServer(async (req, res) => {
       res.end(req.method === 'HEAD' ? undefined : body);
     } catch { writeJson(res, 404, { error: 'Archivo no encontrado.' }); }
   } catch (error) {
-    const code = error.status === 413 ? 413 : error.message?.includes('limite') || error.message?.includes('límite') ? 422 : 400;
+    const code = [400, 413, 422, 503].includes(error?.status) ? error.status : 400;
     const message = code === 400 && !(error instanceof SyntaxError) ? String(error.message || 'Solicitud inválida.') : 'Solicitud inválida.';
     writeJson(res, code, { error: message.slice(0, 240) });
   }
