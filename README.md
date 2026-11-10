@@ -70,3 +70,10 @@ The public core exposes the types `IntentPlugin`, `DataAdapter`, and `SessionSto
 ## License
 
 MIT. See [LICENSE](LICENSE). Contributions and integrations are welcome.
+
+
+## Optional batch import
+
+Register `createBatchPlugin()` to analyze multiline or semicolon-separated lists against any adapter. The resolver detects exact identifiers, duplicates, ambiguous labels and unresolved entries. It processes up to 500 entries, in bounded batches, without writing to the host system.
+
+This library is not published to npm yet. For now, clone the repository and build it, or reference it as a local package in your application.
