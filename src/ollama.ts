@@ -1,6 +1,6 @@
 import type { IntentPlugin } from './types.js';
 import type { KnowledgeHit } from './knowledge.js';
-import { KnowledgeBase } from './knowledge.js';
+import { KnowledgeBase, answerWithSources, isBroadKnowledgeQuestion, knowledgeSocialReply } from './knowledge.js';
 
 export interface OllamaOptions {
   model?: string;
@@ -28,9 +28,17 @@ export function createOllamaKnowledgePlugin(base: KnowledgeBase, options: Ollama
   const fetcher = options.fetcher ?? fetch;
   return {
     id: 'ollama-knowledge', priority: 0,
-    score(_input, normalized) { return base.size && normalized.length > 2 ? 65 : 0; },
+    score(input, normalized) {
+      if (knowledgeSocialReply(base, input)) return 95;
+      return base.size && normalized.length > 2 ? 65 : 0;
+    },
     async respond({ input }) {
+      const social = knowledgeSocialReply(base, input);
+      if (social) return { intent: 'knowledge', text: social };
       const evidence = base.search(input, 4);
+      if (isBroadKnowledgeQuestion(input, evidence)) {
+        return { intent: 'knowledge', text: answerWithSources(base, input).text };
+      }
       if (!evidence.length) return { intent: 'knowledge', text: 'No encontré información sobre eso en los documentos cargados.' };
       const passages = evidence.map((e: KnowledgeHit, i: number) => `[${i+1}] ${e.title} · sección ${e.section}\n${e.passage.slice(0,800)}`).join('\n\n');
       const payload = {
@@ -50,7 +58,7 @@ export function createOllamaKnowledgePlugin(base: KnowledgeBase, options: Ollama
         const refs = evidence.map((e, i) => `[${i+1}] ${e.title}, sección ${e.section}`).join('; ');
         return { intent: 'knowledge', text: answer.slice(0, 5000) + '\n\nFuentes consultadas: ' + refs };
       } catch {
-        return { intent: 'knowledge', text: 'Ollama local no está disponible. Documentación encontrada:\n\n' + evidence.slice(0,2).map((e,i)=>`[${i+1}] ${e.passage.slice(0,440)}\nFuente: ${e.title}, sección ${e.section}`).join('\n\n') };
+        return { intent: 'knowledge', text: 'Ollama local no está disponible. ' + answerWithSources(base, input).text };
       }
     },
   };
