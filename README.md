@@ -111,3 +111,7 @@ npm run demo:knowledge
 Then open `http://127.0.0.1:4174`. Use the document upload card and the floating chat. This is a **localhost-only development demo**, not a public multi-user service; documents remain in RAM. No business files, customer data, credentials, or private integrations are included.
 
 Read the [Knowledge module and security guide](docs/KNOWLEDGE.md) before connecting private documents or deploying anything.
+
+## Contributing and agent guidance
+
+Before implementing features, contributors and coding agents must review [AGENTS.md](AGENTS.md). It requires a documented evaluation of existing libraries, evidence of real-world adoption and known limitations, and a security review before publishing changes. Reuse established solutions when appropriate; never copy proprietary data or secrets into this public repository.
